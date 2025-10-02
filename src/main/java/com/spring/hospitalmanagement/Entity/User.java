@@ -1,10 +1,8 @@
 package com.spring.hospitalmanagement.Entity;
 
 import com.spring.hospitalmanagement.Config.BaseEntity;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.Table;
+import com.spring.hospitalmanagement.Enum.AuthProviderType;
+import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -18,7 +16,12 @@ import java.util.List;
 @Entity
 @NoArgsConstructor
 @Builder
-@Table(name = "users")
+@Table(name = "users",
+        indexes = {
+        @Index(name = "provider_id_provider_type",columnList = "providerId,providerType")
+        }
+
+)
 public class User extends BaseEntity implements UserDetails {
 
 
@@ -26,6 +29,12 @@ public class User extends BaseEntity implements UserDetails {
         private String username;
 
         private String password;
+
+        private String providerId;
+
+        @Enumerated(EnumType.STRING)
+        private AuthProviderType providerType;
+
 
 
     @Override
