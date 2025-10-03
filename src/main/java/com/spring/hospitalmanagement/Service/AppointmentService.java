@@ -8,6 +8,8 @@ import com.spring.hospitalmanagement.Repository.AppointmentRepository;
 import com.spring.hospitalmanagement.Repository.DoctorRepository;
 import com.spring.hospitalmanagement.Repository.PatientRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +26,7 @@ public class AppointmentService {
 
 
     @Transactional
+    @Secured("ROLE_ADMIN")
     public Appointment createAppointment(Appointment appointment,Long doctorID,Long patientId){
 
 
@@ -41,6 +44,7 @@ public class AppointmentService {
 
     }
 
+
     @Transactional
     public void ReassignAppointment(Long appointID,Long doctorID){
 
@@ -56,7 +60,7 @@ public class AppointmentService {
 
 
     }
-
+    @PreAuthorize("hasRole('ADMIN') OR (hasRole('DOCTOR') AND #doctorId == authentication.principal.id)")
     @Transactional
     public List<Appointment> getAllAppoinment(){
 
@@ -64,4 +68,11 @@ public class AppointmentService {
 
     }
 
+    public List<Appointment> getAllAppointmentofDoctor(Long id) {
+
+
+       return appointmentRepository.findAppointmentsByDoctor_Id(id);
+
+
+    }
 }

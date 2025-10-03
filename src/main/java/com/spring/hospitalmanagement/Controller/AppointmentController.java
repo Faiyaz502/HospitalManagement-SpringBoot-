@@ -21,6 +21,8 @@ public class AppointmentController {
         this.appointmentService = appointmentService;
     }
 
+
+
     @GetMapping
     public ResponseEntity<?> getAllPatient(){
 

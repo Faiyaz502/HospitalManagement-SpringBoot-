@@ -2,9 +2,13 @@ package com.spring.hospitalmanagement.Security;
 
 import com.spring.hospitalmanagement.Dto.LoginRequestDto;
 import com.spring.hospitalmanagement.Dto.LoginResponseDto;
+import com.spring.hospitalmanagement.Dto.SignupRequestDto;
 import com.spring.hospitalmanagement.Dto.SignupResponseDto;
+import com.spring.hospitalmanagement.Entity.Patient;
 import com.spring.hospitalmanagement.Entity.User;
 import com.spring.hospitalmanagement.Enum.AuthProviderType;
+import com.spring.hospitalmanagement.Enum.RoleType;
+import com.spring.hospitalmanagement.Repository.PatientRepository;
 import com.spring.hospitalmanagement.Repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 
@@ -20,6 +24,8 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Set;
+
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -30,6 +36,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final ModelMapper mapper;
     private final PasswordEncoder passwordEncoder;
+    private final PatientRepository patientRepository;
 
 
     public LoginResponseDto login(LoginRequestDto loginRequestDto) {
@@ -50,7 +57,10 @@ public class AuthService {
 
     }
 
-    public User signup(LoginRequestDto signupRequest,AuthProviderType authProviderType,String providerId){
+
+    //OAuth signup & ID pass both go through this
+
+    public User signup(SignupRequestDto signupRequest,AuthProviderType authProviderType,String providerId){
 
         User user = userRepository.findByUsername(signupRequest.getUsername()).orElse(null);
 
@@ -61,6 +71,7 @@ public class AuthService {
         user = User.builder()
                 .username(signupRequest.getUsername())
                 .providerId(providerId)
+                .roles(signupRequest.getRoles())
                 .providerType(authProviderType)
                 .build();
 
@@ -69,12 +80,29 @@ public class AuthService {
 
         }
 
-        return userRepository.save(user);
+        user = userRepository.save(user);
+
+        Patient patient = Patient.builder()
+                .name(signupRequest.getName())
+                .email(signupRequest.getUsername())
+                .user(user)
+                .build();
+
+
+        patientRepository.save(patient);
+
+
+        return user;
+
+
+
 
     }
 
 
-    public SignupResponseDto sign(LoginRequestDto signupRequest) {
+
+    // Only Normal Email password signup
+    public SignupResponseDto sign(SignupRequestDto signupRequest) {
 
 
 
@@ -100,22 +128,27 @@ public class AuthService {
         //otherwise signup then login
 
 
+
         AuthProviderType providerType = authUtil.getProviderTypeFromRegistraitonId(registrationId);
         String providerId = authUtil.determineProviderIdFromOAuth2User(oAuth2User,registrationId);
 
+
+        //Search with providerID and providerType
         User user = userRepository.findByProviderIdAndProviderType(providerId,providerType).orElse(null);
 
 
         String email = oAuth2User.getAttribute("email");
+        String name = oAuth2User.getAttribute("name");
 
-
+        //Search by Email if exist
         User emailUser = userRepository.findByUsername(email).orElse(null);
 
+        //if not registered
         if(user == null && emailUser == null){
             //signup first
 
             String username = authUtil.determineUsernameFromOAuth2User(oAuth2User,registrationId,providerId);
-            user= signup(new LoginRequestDto(username,null),providerType,providerId);
+            user= signup(new SignupRequestDto(username,null,name,Set.of(RoleType.PATIENT)),providerType,providerId);
 
         }else if(user != null){
 

@@ -22,7 +22,12 @@ public class Doctor extends BaseEntity {
     private String specialization;
 
 
-    @Column(nullable = false,unique = true,length = 100)
+    @OneToOne
+    @MapsId
+    private User user;
+
+
+    @Column(unique = true,length = 100)
     private String email;
 
     @OneToMany(mappedBy = "doctor")

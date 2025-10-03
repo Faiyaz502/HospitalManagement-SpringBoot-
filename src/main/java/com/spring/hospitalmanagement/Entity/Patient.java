@@ -15,6 +15,7 @@ import java.util.List;
 @Entity
 @Getter
 @Setter
+@Builder
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
@@ -41,7 +42,13 @@ public class Patient extends BaseEntity {
     @Column(unique = true)
     private String email;
 
+    @OneToOne
+    @MapsId
+    private User user;
+
     private String gender;
+
+
     @Enumerated(EnumType.STRING)
     private BloodGroup bloodGroup;
 
